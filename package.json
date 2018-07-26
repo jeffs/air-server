@@ -1,0 +1,12 @@
+{
+  "name": "@jeffs/server",
+  "private": true,
+  "version": "1.0.0",
+  "description": "AIR challenge server",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Jeff Schwab <jeff@unbuggy.com>",
+  "license": "ISC"
+}
