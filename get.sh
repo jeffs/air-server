@@ -11,4 +11,5 @@ mp4='http://localhost:3000/SampleVideo_720x480_1mb.mp4'
 curl http://localhost:3000/ \
     -d 'token=42' \
     -d "url=$mp4" \
+    -d "url=$mp4" \
     -d "url=$mp4"
