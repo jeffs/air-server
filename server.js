@@ -1,3 +1,5 @@
+'use strict';
+
 const express = require('express');
 const fetch = require('node-fetch');
 const fs = require('fs');
@@ -23,7 +25,7 @@ const download = async (url, dest) => new Promise((resolve, reject) => {
     response.pipe(file);
     file.on('finish', () => {
       console.log(`wrote ${dest}`);
-      resolve();
+      resolve(dest);
     });
   }).on('error', err => {
     fs.unlink(dest, () => { });
@@ -35,7 +37,18 @@ const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
-app.post('/', (req, res) => {
+app.post('/', async (req, res) => {
+  const urls = req.body.url;
+  if (!Array.isArray(urls)) {
+    return res.status(400).send('need at least two files to concatenate\n');
+  }
+  Promise.all(
+    urls.map((url, i) => download(url, `tmp/${i}.mp4`))
+  ).then(files => {
+    res.send(JSON.stringify(files));
+  }).catch(err => {
+    res.status(500).send(err.message);
+  });
 
   // check the access token
   // fetch the input files
@@ -43,20 +56,8 @@ app.post('/', (req, res) => {
   // call ffmpeg, writing the output to a public directory
   // return the mpeg URL to the client
 
-
-  res.send(JSON.stringify(req.body));
 });
 
 
-const octocat = 'https://assets-cdn.github.com/images/modules/logos_page/Octocat.png';
-const pianocat = 'http://i3.ytimg.com/vi/J---aiyznGQ/mqdefault.jpg';
-download(pianocat, 'piano.jpeg')
-  .then(() => download('bad://protocol.com', 'badproto.jpeg'))
-  .then(() => download('http://nonesuch@asdfkhgfdfjkjhgfdfjkjhgfdfghjkjgfd.com', 'nonesuch.jpeg'))
-  .then(() => download(octocat, 'octo.jpeg'))
-  .catch(err => {
-    console.log(err.message);
-  });
-
-//app.listen(PORT);
-//console.log(`listening on port ${PORT}`);
+app.listen(PORT);
+console.log(`listening on port ${PORT}`);
