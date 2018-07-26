@@ -107,7 +107,7 @@ app.post('/', (req, res) => {
     .then(({ token, urls }) => checkAccessToken(token).then(() => urls))
     .then(fetchMP4Files)
     .then(concatMP4Files)
-    .then(output => res.send(`${PREFIX}/${output}`))
+    .then(output => res.send(`${PREFIX}/${output}\n`))
     .catch(err => res.status(400).send(err.message));
 });
 
