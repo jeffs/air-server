@@ -37,18 +37,40 @@ const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
-app.post('/', async (req, res) => {
-  const urls = req.body.url;
-  if (!Array.isArray(urls)) {
-    return res.status(400).send('need at least two files to concatenate\n');
+const parseParams = (req) => new Promise((resolve, reject) => {
+  if (!req.body.token) {
+    reject(new Error('missing access token'));
+  } else if (!Array.isArray(req.body.url)) {
+    reject(new Error('need at least two files to concatenate'));
+  } else {
+    resolve({
+      token: req.body.token,
+      urls: req.body.url,
+    });
   }
-  Promise.all(
-    urls.map((url, i) => download(url, `tmp/${i}.mp4`))
-  ).then(files => {
-    res.send(JSON.stringify(files));
-  }).catch(err => {
-    res.status(500).send(err.message);
-  });
+});
+
+const checkAccessToken = async (token) => new Promise((resolve, reject) => {
+  if (token === '42') {
+    resolve();
+  } else {
+    reject(new Error('bad access token'));
+  }
+});
+
+const fetchInputFiles = (urls) => Promise.all(
+  urls.map((url, i) => download(url, `tmp/${i}.mp4`))
+);
+
+app.post('/', (req, res) => {
+  parseParams(req)
+    .then(({ token, urls }) => checkAccessToken(token).then(() => urls))
+    .then(fetchInputFiles)
+    .then(files => {
+      res.send(JSON.stringify(files));
+    }).catch(err => {
+      res.status(500).send(err.message);
+    });
 
   // check the access token
   // fetch the input files
